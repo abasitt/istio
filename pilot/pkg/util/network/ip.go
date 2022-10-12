@@ -71,6 +71,9 @@ func getPrivateIPsIfAvailable() ([]string, bool) {
 		if iface.Flags&net.FlagLoopback != 0 {
 			continue // loopback interface
 		}
+		if iface.Name != "eth0" {
+			continue // eth0 only
+		}
 		addrs, _ := iface.Addrs()
 
 		for _, addr := range addrs {
