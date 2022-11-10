@@ -193,27 +193,15 @@ func constructConfig() *config.Config {
 
 // getLocalIP returns the local IP address
 func getLocalIP() (net.IP, error) {
-    
-	ifaces, _ := net.Interfaces()
+	addrs, err := LocalIPAddrs()
+	if err != nil {
+		return nil, err
+	}
 
-	for _, iface := range ifaces {
-		if iface.Flags&net.FlagUp == 0 {
-			continue // interface down
+	for _, a := range addrs {
+		if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() && !ipnet.IP.IsLinkLocalUnicast() && !ipnet.IP.IsLinkLocalMulticast() {
+			return ipnet.IP, nil
 		}
-		if iface.Flags&net.FlagLoopback != 0 {
-			continue // loopback interface
-		}
-		if iface.Name != "eth0" {
-			continue // eth0 only
-		}
-
-        addrs, _ := iface.Addrs()
-	
-	    for _, a := range addrs {
-	    	if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() && !ipnet.IP.IsLinkLocalUnicast() && !ipnet.IP.IsLinkLocalMulticast() {
-	    		return ipnet.IP, nil
-	    	}
-	    }
 	}
 	return nil, fmt.Errorf("no valid local IP address found")
 }
